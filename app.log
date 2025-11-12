@@ -1,0 +1,8 @@
+{"level":"info","msg":"Logger initialized. Level set to: debug","time":"2025-10-31T15:41:49+07:00"}
+{"level":"debug","msg":"Debug logging is active.","time":"2025-10-31T15:41:49+07:00"}
+{"level":"info","msg":"Starting Prometheus Exporter...","time":"2025-10-31T15:41:49+07:00"}
+{"level":"debug","msg":"Configuration loaded successfully from configs/config.yaml.","time":"2025-10-31T15:41:49+07:00"}
+{"level":"info","msg":"Listening on 9810 with cache interval 30s","time":"2025-10-31T15:41:49+07:00"}
+{"level":"info","msg":"Logger initialized. Level set to: info","time":"2025-10-31T15:42:55+07:00"}
+{"level":"info","msg":"Starting Prometheus Exporter...","time":"2025-10-31T15:42:55+07:00"}
+{"level":"info","msg":"Listening on 9810 with cache interval 30s","time":"2025-10-31T15:42:55+07:00"}

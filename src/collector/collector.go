@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"           // Needed for strings.ReplaceAll on the logout endpoint
 	"sync"
 	"time"
@@ -50,6 +51,29 @@ func NewExporter(cfg *config.AppConfig, interval time.Duration) *Exporter {
 		ScrapeData: make(map[string][]prometheus.Metric),
 		CacheMutex: sync.RWMutex{},
 	}
+}
+
+func DetectAndConvert(s string) (interface{}, string, error) {
+	// 1. Tidy up the string by trimming whitespace.
+	s = strings.TrimSpace(s)
+
+	// 2. Try parsing as an integer first (more specific).
+	// ParseInt requires the base (10) and bit size (64).
+	if i, err := strconv.ParseInt(s, 10, 64); err == nil {
+		return i, "int", nil
+	}
+
+	// 3. If integer parsing fails, try parsing as a float (more general).
+	// ParseFloat requires the bit size (64).
+	if f, err := strconv.ParseFloat(s, 64); err == nil {
+		// A number is parsed as a float. Check if it *could* have been an integer.
+		// Example: "123.0" will be parsed as a float, but we classified "123" as an int above.
+		// If you only care about *valid* number syntax, this is sufficient.
+		return f, "float", nil
+	}
+
+	// 4. If neither works, return an error.
+	return nil, "none", fmt.Errorf("input string '%s' is not a valid integer or floating-point number", s)
 }
 
 // --- Prometheus Scrape Handling ---
@@ -303,7 +327,7 @@ func (tc *TargetCollector) Logout() error {
 	// The SessionPathID substitution will now occur in performRequest
 	_, err := tc.performRequest(req)
 	if err != nil {
-        // Log the error but don't return it as critical—it's cleanup.
+        // Log the error but don't return it as critical.
 		log.Printf("[%s] [WARN]: Logout request failed (token may be already expired): %v", tc.Target, err)
         return nil
 	}
@@ -510,9 +534,21 @@ func (tc *TargetCollector) processComponentMetrics(jsonBody string, comp config.
 			})
 		} else if metricResult.Exists() {
 			// --- B) Handle Single-Value Metrics ---
-			
-			if metricResult.Type != gjson.Number {
+			value, detectedType, err := DetectAndConvert(metricResult.String())
+
+			if err != nil {
+				// log.Printf("[%s] [WARNING]: Metric %s: %v", tc.Target, metricDef.Name, err)
 				metricValue = 0
+			} else {
+				// Use the detected type to set metricValue appropriately
+				switch detectedType {
+				case "int":
+					metricValue = float64(value.(int64))
+				case "float":
+					metricValue = value.(float64)
+				default:
+					metricValue = 0
+				}
 			}
 
 			labelValues := extractLabelValues(jsonString, metricDef.Labels, 0)

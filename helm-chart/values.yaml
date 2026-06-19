@@ -1,0 +1,61 @@
+replicas: 1
+namespace: vmagent-storage
+
+image:
+  repository: ptthanh1511/san_exporter
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+instances:
+  - name: san-storage-a
+    servicePort: 8888
+    config: |
+      port: 8888
+      host: 0.0.0.0
+      debug: false
+      interval: 300
+      timeout: 300
+      log_file: "san_exporter.log"
+      enabled_backends:
+      - metrics
+      backends:
+      - name: "metrics"
+        interval: 180
+        timeout: 300
+        VSP_api_ip: "<san-api-ip>"
+        VSP_api_port: "443"
+        serial: "<san-serial>"
+        username: "<username>"
+        password: "<password>"
+        driver: "hitachig700"
+        optional_metrics:
+          pool: true
+          node: true
+          alert: false
+          disk: false
+  - name: san-storage-b
+    servicePort: 8888
+    config: |
+      port: 8888
+      host: 0.0.0.0
+      debug: false
+      interval: 300
+      timeout: 300
+      log_file: "san_exporter.log"
+      enabled_backends:
+      - metrics
+      backends:
+      - name: "metrics"
+        interval: 180
+        timeout: 300
+        VSP_api_ip: "<another-san-api-ip>"
+        VSP_api_port: "443"
+        serial: "<another-san-serial>"
+        username: "<username>"
+        password: "<password>"
+        driver: "hitachig700"
+        optional_metrics:
+          pool: true
+          node: true
+          alert: false
+          disk: false

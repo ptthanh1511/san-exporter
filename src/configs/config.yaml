@@ -293,4 +293,108 @@ components:
         json_path: "data.#.errorDetail"
       - name: "location"
         json_path: "data.#.location"
+  - name: "pools_detail"
+    endpoint: "/ConfigurationManager/v1/objects/pools"
+    metrics:
+    - name: "pool_totalLocatedCapacity"
+      help: "Total capacity of DP volumes allocated in the pool (MB)"
+      type: "gauge"
+      json_path: "data.#.totalLocatedCapacity"
+      labels:
+      - {name: "name", json_path: "data.#.poolName"}
+      - {name: "id",   json_path: "data.#.poolId"}
+    - name: "pool_virtualVolumeCapacityRate"
+      help: "Subscription rate of the pool (%)"
+      type: "gauge"
+      json_path: "data.#.virtualVolumeCapacityRate"
+      labels:
+      - {name: "name", json_path: "data.#.poolName"}
+      - {name: "id",   json_path: "data.#.poolId"}
+    - name: "pool_usedCapacityRate"
+      help: "Used capacity rate of the pool (%)"
+      type: "gauge"
+      json_path: "data.#.usedCapacityRate"
+      labels:
+      - {name: "name", json_path: "data.#.poolName"}
+      - {name: "id",   json_path: "data.#.poolId"}
+    - name: "pool_warningThreshold"
+      help: "Warning threshold configured on the pool (%)"
+      type: "gauge"
+      json_path: "data.#.warningThreshold"
+      labels:
+      - {name: "name", json_path: "data.#.poolName"}
+      - {name: "id",   json_path: "data.#.poolId"}
+    - name: "pool_depletionThreshold"
+      help: "Depletion threshold configured on the pool (%)"
+      type: "gauge"
+      json_path: "data.#.depletionThreshold"
+      labels:
+      - {name: "name", json_path: "data.#.poolName"}
+      - {name: "id",   json_path: "data.#.poolId"}
+    - name: "pool_numOfLdevs"
+      help: "Number of LDEVs in the pool"
+      type: "gauge"
+      json_path: "data.#.numOfLdevs"
+      labels:
+      - {name: "name", json_path: "data.#.poolName"}
+      - {name: "id",   json_path: "data.#.poolId"}
+  - name: "ldevs"
+    endpoint: "/ConfigurationManager/v1/objects/ldevs?ldevOption=dpVolume&count=16384"
+    metrics:
+    - name: "ldev_mapped_blocks"
+      help: "Provisioned capacity of host-mapped DP LDEVs (512-byte blocks)"
+      type: "gauge"
+      json_path: "data.#(numOfPorts>0)#|#(blockCapacity>=0)#.blockCapacity"
+      labels:
+      - {name: "ldev_id",    json_path: "data.#(numOfPorts>0)#|#(blockCapacity>=0)#.ldevId"}
+      - {name: "pool_id",    json_path: "data.#(numOfPorts>0)#|#(blockCapacity>=0)#.poolId"}
+      - {name: "host_group", json_path: "data.#(numOfPorts>0)#|#(blockCapacity>=0)#.ports.0.hostGroupName"}
+    - name: "ldev_mapped_used_blocks"
+      help: "Physically used capacity of host-mapped DP LDEVs (512-byte blocks)"
+      type: "gauge"
+      json_path: "data.#(numOfPorts>0)#|#(numOfUsedBlock>=0)#.numOfUsedBlock"
+      labels:
+      - {name: "ldev_id",    json_path: "data.#(numOfPorts>0)#|#(numOfUsedBlock>=0)#.ldevId"}
+      - {name: "pool_id",    json_path: "data.#(numOfPorts>0)#|#(numOfUsedBlock>=0)#.poolId"}
+      - {name: "host_group", json_path: "data.#(numOfPorts>0)#|#(numOfUsedBlock>=0)#.ports.0.hostGroupName"}
+    - name: "ldev_blocks"
+      help: "Provisioned capacity of all DP LDEVs (512-byte blocks)"
+      type: "gauge"
+      json_path: "data.#(numOfUsedBlock>=0)#.blockCapacity"
+      labels:
+      - {name: "ldev_id", json_path: "data.#(numOfUsedBlock>=0)#.ldevId"}
+      - {name: "pool_id", json_path: "data.#(numOfUsedBlock>=0)#.poolId"}
+    - name: "ldev_used_blocks"
+      help: "Physically used capacity of all DP LDEVs (512-byte blocks)"
+      type: "gauge"
+      json_path: "data.#(numOfUsedBlock>=0)#.numOfUsedBlock"
+      labels:
+      - {name: "ldev_id", json_path: "data.#(numOfUsedBlock>=0)#.ldevId"}
+      - {name: "pool_id", json_path: "data.#(numOfUsedBlock>=0)#.poolId"}
+    - name: "ldev_dedup_system_blocks"
+      help: "Deduplication system volumes DS/DSD (512-byte blocks)"
+      type: "gauge"
+      json_path: "data.#(attributes.#(%\"DS*\"))#.blockCapacity"
+      labels:
+      - {name: "ldev_id", json_path: "data.#(attributes.#(%\"DS*\"))#.ldevId"}
+      - {name: "pool_id", json_path: "data.#(attributes.#(%\"DS*\"))#.poolId"}
+    - name: "ldev_label_info"
+      help: "LDEV nickname (value = blockCapacity in 512-byte blocks)"
+      type: "gauge"
+      json_path: "data.#(label!=\"\")#|#(blockCapacity>=0)#.blockCapacity"
+      labels:
+      - {name: "ldev_id", json_path: "data.#(label!=\"\")#|#(blockCapacity>=0)#.ldevId"}
+      - {name: "label",   json_path: "data.#(label!=\"\")#|#(blockCapacity>=0)#.label"}
+  - name: "parity_groups"
+    endpoint: "/ConfigurationManager/v1/objects/parity-groups"
+    metrics:
+    - name: "parity_group_total_capacity"
+      help: "Total capacity of the parity group (GB)"
+      type: "gauge"
+      json_path: "data.#(totalCapacity>=0)#.totalCapacity"
+      labels:
+      - {name: "pg_id",      json_path: "data.#(totalCapacity>=0)#.parityGroupId"}
+      - {name: "raid_level", json_path: "data.#(totalCapacity>=0)#.raidLevel"}
+      - {name: "raid_type",  json_path: "data.#(totalCapacity>=0)#.raidType"}
+      - {name: "drive_type", json_path: "data.#(totalCapacity>=0)#.driveTypeName"}
 
